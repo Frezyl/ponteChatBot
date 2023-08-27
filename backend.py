@@ -10,6 +10,8 @@ app = FastAPI()
 
 security = HTTPBasic()
 
+mock_db = mocked_parts.MessageDataBase()
+
 
 def authenticate(
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
@@ -32,23 +34,23 @@ def authenticate(
         )
 
 
-@app.get("/messages")
+@app.get("/mock_messages")
 async def get_messages(number_of_messages: int = 10):
     """
     Returns the last n messages
     :param number_of_messages: the number of messages to return
     :return: the last n messages
     """
-    return {"messages": "Hello world"}
+    return mock_db.get_messages(number_of_messages)
 
 
-@app.post("/messages")
+@app.post("/mock_messages")
 async def send_message(
         message: str,
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     """
-    Sends a message to the chatbot
+    Sends a message to the mock chatbot
     :param message: The message to send
     :param credentials: The credentials of the user
     :return: The response of the chatbot

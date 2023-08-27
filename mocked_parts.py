@@ -30,5 +30,29 @@ async def call_external_service(messages: List[str]):
             "total_tokens": 42
         }
     }"""
-        )
+    )
     return response
+
+
+class MessageDataBase:
+    """
+    Mock data storage for messages
+    """
+    def __init__(self):
+        with open("data/test_conversation_history.json", "r") as f:
+            self.messages = json.loads(f.read())
+
+    def get_messages(self, limit=10):
+        """
+        Get the last n messages from the mock database
+        :param limit: The number of messages to return
+        :return: The last n messages
+        """
+        return self.messages[-limit:]
+
+    def add_message(self, message):
+        """
+        Add a message to the mock database
+        :param message: The message to add
+        """
+        self.messages.append(message)
