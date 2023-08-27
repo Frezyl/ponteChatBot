@@ -13,6 +13,10 @@ security = HTTPBasic()
 mock_db = mocked_parts.MessageDataBase()
 
 
+def format_new_person_message(message):
+    return {"role": "user", "content": message}
+
+
 def authenticate(
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
@@ -56,5 +60,10 @@ async def send_message(
     :return: The response of the chatbot
     """
     authenticate(credentials)
-    response = await mocked_parts.call_external_service([message])
+    message = format_new_person_message(message)
+    messages = mock_db.get_messages()
+    messages.append(message)
+    response = await mocked_parts.call_external_service(messages)
+    mock_db.add_message(message)
+    mock_db.add_message(response['choices'][0]['message'])
     return response['choices'][0]['message']['content']
