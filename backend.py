@@ -4,6 +4,8 @@ from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 
+import mocked_parts
+
 app = FastAPI()
 
 security = HTTPBasic()
@@ -52,4 +54,5 @@ async def send_message(
     :return: The response of the chatbot
     """
     authenticate(credentials)
-    return {"messages": "Successful authentication"}
+    response = await mocked_parts.call_external_service([message])
+    return response['choices'][0]['message']['content']
