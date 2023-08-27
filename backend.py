@@ -14,6 +14,11 @@ mock_db = mocked_parts.MessageDataBase()
 
 
 def format_new_person_message(message):
+    """
+    Formats a message from a new person to ChatGPT style
+    :param message: Incoming message to format
+    :return: Formatted message
+    """
     return {"role": "user", "content": message}
 
 
