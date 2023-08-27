@@ -12,6 +12,9 @@ security = HTTPBasic()
 def authenticate(
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
+    """
+    :param credentials: HTTPBasicCredentials (password and username) of the user
+    """
     is_username_correct = secrets.compare_digest(
         credentials.username,
         "test_user"
@@ -28,7 +31,12 @@ def authenticate(
 
 
 @app.get("/messages")
-async def get_messages():
+async def get_messages(number_of_messages: int = 10):
+    """
+    Returns the last n messages
+    :param number_of_messages: the number of messages to return
+    :return: the last n messages
+    """
     return {"messages": "Hello world"}
 
 
@@ -37,5 +45,11 @@ async def send_message(
         message: str,
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
+    """
+    Sends a message to the chatbot
+    :param message: The message to send
+    :param credentials: The credentials of the user
+    :return: The response of the chatbot
+    """
     authenticate(credentials)
     return {"messages": "Successful authentication"}
