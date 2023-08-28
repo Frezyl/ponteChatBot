@@ -3,7 +3,7 @@ from os import getenv
 import psycopg2
 
 
-class Database:
+class PersistentDb:
 
     def __init__(self):
         postgres_pw = getenv("POSTGRES_PASSWORD")

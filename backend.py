@@ -15,6 +15,7 @@ security = HTTPBasic()
 mock_db = mocked_parts.MessageDataBase()
 
 message_data_base = database.Database()
+message_data_base = database.PersistentDb()
 
 
 def format_new_person_message(message):
