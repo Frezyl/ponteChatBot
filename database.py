@@ -1,3 +1,4 @@
+import time
 from os import getenv
 
 import psycopg2
@@ -73,3 +74,26 @@ class PersistentDb:
             (user, message,)
         )
         self.conn.commit()
+
+
+class RateLimitDb:
+
+    def __init__(self):
+        self.limit_info = {}
+
+    def check_user(self, user):
+        return user in self.limit_info
+
+    def add_event(self, user):
+        if self.check_user(user) is False:
+            self.limit_info[user] = [time.time()]
+        else:
+            self.limit_info[user].append(time.time())
+
+    def check_rate_limit(self, user, requests_per_minute):
+        if len(self.limit_info[user]) < requests_per_minute:
+            return True
+        if time.time() - self.limit_info[user][0] >= 60:
+            self.limit_info[user].pop(0)
+            return True
+        return False

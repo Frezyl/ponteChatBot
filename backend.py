@@ -15,6 +15,7 @@ security = HTTPBasic()
 mock_db = mocked_parts.MessageDataBase()
 
 message_data_base = database.PersistentDb()
+rate_limit_database = database.RateLimitDb()
 
 
 def format_new_person_message(message):
@@ -69,6 +70,20 @@ async def send_message(
     :return: The response of the chatbot
     """
     authenticate(credentials)
+    user_exists = rate_limit_database.check_user(credentials.username)
+    if user_exists is False:
+        rate_limit_database.add_event(credentials.username)
+    else:
+        if rate_limit_database.check_rate_limit(
+                credentials.username,
+                3
+        ) is False:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many requests"
+            )
+        else:
+            rate_limit_database.add_event(credentials.username)
     message = format_new_person_message(message)
     messages = mock_db.get_messages()
     messages.append(message)
@@ -90,6 +105,20 @@ async def send_GPT_message(
     :return: The response of the chatbot
     """
     authenticate(credentials)
+    user_exists = rate_limit_database.check_user(credentials.username)
+    if user_exists is False:
+        rate_limit_database.add_event(credentials.username)
+    else:
+        if rate_limit_database.check_rate_limit(
+                credentials.username,
+                3
+        ) is False:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail="Too many requests"
+            )
+        else:
+            rate_limit_database.add_event(credentials.username)
     message = format_new_person_message(message)
     messages = message_data_base.query_user_history(
         credentials.username
