@@ -76,3 +76,35 @@ async def send_message(
     mock_db.add_message(message)
     mock_db.add_message(response['choices'][0]['message'])
     return response['choices'][0]['message']['content']
+
+
+@app.post("/GPTmessages")
+async def send_GPT_message(
+        message: str,
+        credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+):
+    """
+    Sends a message to the real chatbot (ChatGPT 3.5)
+    :param message: The message to send
+    :param credentials: The credentials of the user (username and password)
+    :return: The response of the chatbot
+    """
+    authenticate(credentials)
+    message = format_new_person_message(message)
+    messages = message_data_base.query_user_history(
+        credentials.username
+    )
+    messages = messages.append(message)
+    response = await openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=messages
+    )
+    message_data_base.add_message_to_user(
+        message,
+        credentials.username
+    )
+    message_data_base.add_message_to_user(
+        response['choices'][0]['message'],
+        credentials.username
+    )
+    return response['choices'][0]['message']['content']
