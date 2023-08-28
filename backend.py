@@ -1,9 +1,11 @@
 import secrets
 from typing import Annotated
 
+import openai
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 
+import database
 import mocked_parts
 
 app = FastAPI()
@@ -11,6 +13,8 @@ app = FastAPI()
 security = HTTPBasic()
 
 mock_db = mocked_parts.MessageDataBase()
+
+message_data_base = database.Database()
 
 
 def format_new_person_message(message):
