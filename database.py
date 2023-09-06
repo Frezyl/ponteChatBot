@@ -91,9 +91,9 @@ class RateLimitDb:
             self.limit_info[user].append(time.time())
 
     def check_rate_limit(self, user, requests_per_minute):
-        if len(self.limit_info[user]) < requests_per_minute:
-            return True
-        if time.time() - self.limit_info[user][0] >= 60:
-            self.limit_info[user].pop(0)
-            return True
-        return False
+        if user not in self.limit_info:
+            return False
+        request_times = self.limit_info[user]
+        while request_times and time.time() - request_times[0] > 60:
+            request_times.pop(0)
+        return len(request_times) < requests_per_minute
