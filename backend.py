@@ -2,7 +2,7 @@ import secrets
 from typing import Annotated
 
 import openai
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, Request
 from fastapi.security import HTTPBasicCredentials, HTTPBasic
 
 import database
@@ -60,15 +60,18 @@ async def get_messages(number_of_messages: int = 10):
 
 @app.post("/mock_messages")
 async def send_message(
-        message: str,
+        request: Request,
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     """
     Sends a message to the mock chatbot
-    :param message: The message to send
+    :param request: The request object containing the message
     :param credentials: The credentials of the user
     :return: The response of the chatbot
     """
+    body = await request.json()
+    message = body['message']
+
     authenticate(credentials)
     user_exists = rate_limit_database.check_user(credentials.username)
     if user_exists is False:
@@ -95,15 +98,18 @@ async def send_message(
 
 @app.post("/GPTmessages")
 async def send_GPT_message(
-        message: str,
+        request: Request,
         credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     """
     Sends a message to the real chatbot (ChatGPT 3.5)
-    :param message: The message to send
+    :param request: The request object containing the message
     :param credentials: The credentials of the user (username and password)
     :return: The response of the chatbot
     """
+
+    body = await request.json()
+    message = body['message']
     authenticate(credentials)
     user_exists = rate_limit_database.check_user(credentials.username)
     if user_exists is False:
