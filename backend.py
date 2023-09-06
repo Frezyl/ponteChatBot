@@ -2,8 +2,8 @@ import secrets
 from typing import Annotated
 
 import openai
-from fastapi import Depends, FastAPI, HTTPException, status, Request
-from fastapi.security import HTTPBasicCredentials, HTTPBasic
+from fastapi import Depends, FastAPI, HTTPException, Request, status
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
 
 import database
 import mocked_parts
@@ -34,17 +34,14 @@ def authenticate(
     :param credentials: HTTPBasicCredentials (password and username) of the user
     """
     is_username_correct = secrets.compare_digest(
-        credentials.username,
-        "test_user"
+            credentials.username, "test_user"
     )
     is_password_correct = secrets.compare_digest(
-        credentials.password,
-        "test_password"
+            credentials.password, "test_password"
     )
     if not (is_username_correct and is_password_correct):
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect password or username"
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect password or username"
         )
 
 
@@ -60,8 +57,7 @@ async def get_messages(number_of_messages: int = 10):
 
 @app.post("/mock_messages")
 async def send_message(
-        request: Request,
-        credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+        request: Request, credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     """
     Sends a message to the mock chatbot
@@ -78,12 +74,10 @@ async def send_message(
         rate_limit_database.add_event(credentials.username)
     else:
         if rate_limit_database.check_rate_limit(
-                credentials.username,
-                3
+                credentials.username, 3
         ) is False:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many requests"
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many requests"
             )
         else:
             rate_limit_database.add_event(credentials.username)
@@ -98,8 +92,7 @@ async def send_message(
 
 @app.post("/GPTmessages")
 async def send_GPT_message(
-        request: Request,
-        credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+        request: Request, credentials: Annotated[HTTPBasicCredentials, Depends(security)]
 ):
     """
     Sends a message to the real chatbot (ChatGPT 3.5)
@@ -116,30 +109,21 @@ async def send_GPT_message(
         rate_limit_database.add_event(credentials.username)
     else:
         if rate_limit_database.check_rate_limit(
-                credentials.username,
-                3
+                credentials.username, 3
         ) is False:
             raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="Too many requests"
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many requests"
             )
         else:
             rate_limit_database.add_event(credentials.username)
     message = format_new_person_message(message)
-    messages = message_data_base.query_user_history(
-        credentials.username
-    )
+    messages = message_data_base.query_user_history(credentials.username)
     messages = messages.append(message)
     response = await openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=messages
+            model="gpt-3.5-turbo", messages=messages
     )
+    message_data_base.add_message_to_user(message, credentials.username)
     message_data_base.add_message_to_user(
-        message,
-        credentials.username
-    )
-    message_data_base.add_message_to_user(
-        response['choices'][0]['message'],
-        credentials.username
+            response['choices'][0]['message'], credentials.username
     )
     return response['choices'][0]['message']['content']

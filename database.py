@@ -10,11 +10,7 @@ class PersistentDb:
         postgres_pw = getenv("POSTGRES_PASSWORD")
 
         self.conn = psycopg2.connect(
-            database="postgres",
-            user="postgres",
-            password=postgres_pw,
-            host="127.0.0.1",
-            port="5432"
+                database="postgres", user="postgres", password=postgres_pw, host="127.0.0.1", port="5432"
         )
 
         print("Database opened successfully")
@@ -25,10 +21,7 @@ class PersistentDb:
         :param data: name and password of the user
         """
         cur = self.conn.cursor()
-        cur.execute(
-            "INSERT INTO users (name,password) VALUES (%s, %s)",
-            data
-        )
+        cur.execute("INSERT INTO users (name,password) VALUES (%s, %s)", data)
 
         self.conn.commit()
 
@@ -70,8 +63,7 @@ class PersistentDb:
         cur = self.conn.cursor()
         message = str(message)
         cur.execute(
-            "INSERT INTO messages (username, text) VALUES (%s, %s)",
-            (user, message,)
+                "INSERT INTO messages (username, text) VALUES (%s, %s)", (user, message,)
         )
         self.conn.commit()
 
