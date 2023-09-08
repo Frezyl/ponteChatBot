@@ -3,9 +3,8 @@ from os import getenv
 from typing import Annotated
 
 import psycopg2
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from starlette import status
 
 security = HTTPBasic()
 
