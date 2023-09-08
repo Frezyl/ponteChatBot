@@ -11,6 +11,9 @@ security = HTTPBasic()
 
 
 class PersistentDb:
+    """
+    Class for interacting with the persistent database
+    """
 
     def __init__(self):
         postgres_pw = getenv("POSTGRES_PASSWORD")
@@ -75,32 +78,47 @@ class PersistentDb:
 
 
 class RateLimitDb:
+    """
+    Class for interacting with the in memory rate limit database
+    """
 
     def __init__(self):
         self.limit_info = {}
 
     def check_user(self, user):
+        """
+        Checks if a user is in the rate limit database
+        :param user: name of the user
+        :return: True if the user is in the database, False otherwise
+        """
         return user in self.limit_info
 
     def add_event(self, user):
+        """
+        Adds an event to the rate limit database
+        :param user:
+        """
         if self.check_user(user) is False:
             self.limit_info[user] = [time.time()]
         else:
             self.limit_info[user].append(time.time())
 
-    def check_rate_limit(self, user, requests_per_minute):
     def check_rate_limit(
             self,
             credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+    ) -> bool:
+        """
+        Checks if a user has exceeded the rate limit
+        :param credentials: user credentials
+        :return: True if the user has not exceeded the rate limit, False otherwise
+        """
         user = credentials.username
         if user not in self.limit_info:
-            return False
             self.limit_info[user] = [time.time()]
             return True
         request_times = self.limit_info[user]
         while request_times and time.time() - request_times[0] > 60:
             request_times.pop(0)
-        return len(request_times) < requests_per_minute
         if len(request_times) < 3:
             request_times.append(time.time())
             return True
