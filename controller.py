@@ -1,13 +1,13 @@
 from typing import Annotated
 
 import openai
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.security import HTTPBasicCredentials
-from starlette import status
-from starlette.requests import Request
 
+import backend
+import database
 import mocked_parts
-from backend import authenticate, format_new_person_message, message_data_base, mock_db, rate_limit_database, security
+from backend import authenticate, format_new_person_message, message_data_base, mock_db
 
 app = FastAPI()
 
@@ -22,9 +22,9 @@ async def get_messages(number_of_messages: int = 10):
     return mock_db.get_messages(number_of_messages)
 
 
-@app.post("/mock_messages")
+@app.post("/mock_messages", dependencies=[Depends(authenticate), Depends(backend.rate_limit_database.check_rate_limit)])
 async def send_message(
-        request: Request, credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+        request: Request, credentials: Annotated[HTTPBasicCredentials, Depends(database.security)]
 ):
     """
     Sends a message to the mock chatbot
@@ -74,7 +74,7 @@ async def process_message_and_check_ratelimit(credentials, message_from_body):
         "/GPTmessages", dependencies=[Depends(authenticate), Depends(backend.rate_limit_database.check_rate_limit)]
 )
 async def send_GPT_message(
-        request: Request, credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+        request: Request, credentials: Annotated[HTTPBasicCredentials, Depends(database.security)]
 ):
     """
     Sends a message to the real chatbot (ChatGPT 3.5)

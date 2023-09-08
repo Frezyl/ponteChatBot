@@ -1,7 +1,13 @@
 import time
 from os import getenv
+from typing import Annotated
 
 import psycopg2
+from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from starlette import status
+
+security = HTTPBasic()
 
 
 class PersistentDb:
@@ -83,9 +89,22 @@ class RateLimitDb:
             self.limit_info[user].append(time.time())
 
     def check_rate_limit(self, user, requests_per_minute):
+    def check_rate_limit(
+            self,
+            credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+        user = credentials.username
         if user not in self.limit_info:
             return False
+            self.limit_info[user] = [time.time()]
+            return True
         request_times = self.limit_info[user]
         while request_times and time.time() - request_times[0] > 60:
             request_times.pop(0)
         return len(request_times) < requests_per_minute
+        if len(request_times) < 3:
+            request_times.append(time.time())
+            return True
+        else:
+            raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail="Rate limit exceeded"
+            )

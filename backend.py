@@ -2,12 +2,10 @@ import secrets
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import HTTPBasicCredentials
 
 import database
 import mocked_parts
-
-security = HTTPBasic()
 
 mock_db = mocked_parts.MessageDataBase()
 
@@ -25,7 +23,7 @@ def format_new_person_message(message):
 
 
 def authenticate(
-        credentials: Annotated[HTTPBasicCredentials, Depends(security)]
+        credentials: Annotated[HTTPBasicCredentials, Depends(database.security)]
 ):
     """
     :param credentials: HTTPBasicCredentials (password and username) of the user
